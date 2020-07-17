@@ -1,0 +1,34 @@
+---
+# This is an ansible Playbook!  One way to define an ansible playbook is with a single yaml file like this one!
+- name: My Playbook
+  hosts: all
+  become: true
+
+  # This is the correct way to define vars in a playbook!
+  vars:
+  - unused_variable: im unused. do i mess things up?  Nope! Hooray!
+  - action: "some other var value"
+  - bigguy: 
+    - list val 1
+    - list val 2
+
+  # define your tasks!  these will execute on the controlled machine!
+  tasks:
+
+  - name: mount a drive onto the computer
+    become: yes
+    become_user: root
+    # that means we are using the 'mount' module.  see https://docs.ansible.com/ansible/latest/modules/mount_module.html for the docs!
+    mount:
+      fstype: file system type here
+      name: path here
+      src: source location here
+      state: mounted
+    when: you can optionally put a conditional here to determine when the module will execute vs being skipped over
+    ignore_errors: yes
+
+  - name: some other task
+    become: yes
+    become_user: root
+    module name here:
+      # bla bla bla

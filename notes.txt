@@ -1,0 +1,229 @@
+react query
+--------------
+https://github.com/tannerlinsley/react-query#installation
+
+
+
+
+SQL stuff
+-----------------
+remember to COMMIT your changes
+
+
+example PL/SQL block:
+
+SET SERVEROUTPUT ON; 
+DECLARE
+  myvarname varchar2(255) := 'before';
+BEGIN
+  dbms_system.get_env('TZ', myvarname);
+  dbms_output.put_line('begin');
+  dbms_output.put_line(myvarname);
+  dbms_output.put_line('put_line is working');
+END;
+/
+
+
+
+
+
+typescript type declarations explained:
+-----------------------------------------------------------------
+https://2ality.com/2018/04/type-notation-typescript.html
+
+
+
+
+purge oracle SQL db recyclebin
+----------------------------------
+use the command:
+purge recyclebin
+
+
+
+
+Definitions / Terms / Acronyms / keyterms key terms / Jargon / Glossary
+-------------------------------------------------------------------------
+DB - Database
+CDB - Container DB.  Each CDB contains one or more PDBs.
+PDB - A "pluggable database" that uses the compute/memory resources of the CDB .
+DataGuard - an Oracle tool that helps sync primary and standby CDBs, among other things.
+ORACLE_SID - The Oracle system identifier.
+sqlplus - SQL Plus (sql client CLI)
+srvctl - server control (main Oracle CLI)
+dgmgrl - Data Guard ManaGeR repL ? (Data Guard CLI REPL)
+rman - Recovery Manager -- An oracle DB recovery manager CLI REPL
+RAC - Real Application Clustering
+AWX - the old name of 'Ansible Tower'
+Guardium - IBM Security Guardium -- 
+ODBC - Open Database Connectivity (interface by Microsoft for connecting to a DB via SQL)
+pyodbc - Python ODBC (python bindings)
+abend - "abnormal end".  Termination of a process prior to completion.
+DBA - DB Administrator
+OOM - out of memory
+TDE - transparent data encryption - https://docs.oracle.com/cd/E11882_01/network.112/e40393/asotrans.htm#ASOAG9515
+RDS - Relational Database Services
+CA - Certificate Authority -- something that signs certificates
+
+
+
+
+
+
+
+
+timesheets / time off
+------------------------
+
+company(client) time logging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This tracks hours WORKED.  Hence Holidays, Furlough Days, PTO Days, and sick days are marked 0.
+
+For FURLOUGH days AND HOLIDAYS, put a "0" in the FURLOUGH day category.
+
+For PTO Days and Sick Days, just leave it blank.
+
+
+eazytyme
+~~~~~~~~
+This tracks hours BILLED TO CLIENT.  This is almost identical to beeline.  Holidays and Furlough days are marked 0.  PTO days and Sick days have a special designation and are marked with 8 in their designation.
+
+
+
+
+
+
+
+ORACLE TOOLS
+-------------
+/etc/oratab
+
+
+
+
+
+
+Oracle DB lookup / Oracle DBs / Oracle Databases
+---------------------------------------------------
+If you need the Hostname or Port for a CDB or PDB, look it up with the "tnsping" utility on any machine that has Oracle installed (just include $ORACLE_HOME/bin in your path, and then run `tnsping <db_unique_name>`).
+
+NOTE ALSO the utilities sqlplus, srvctl, and dgmgrl are in the same place.
+
+
+
+
+GREAT example of expanded rows:
+https://gist.github.com/markerikson/bd9f03e0808558c5951e02f1aa98c563
+
+opened a SO question about error:
+https://stackoverflow.com/questions/59398557/using-state-and-includes-in-react-gives-argument-of-type-number-is-not-assigna
+
+
+
+
+
+
+react global vars
+--------------------
+https://stackoverflow.com/questions/34351804/how-to-declare-a-global-variable-in-react
+
+
+
+react key error SO question:
+-----------------------------------
+https://stackoverflow.com/questions/59903486/how-to-find-the-cause-of-the-warning-each-child-in-a-list-should-have-a-unique
+
+
+
+
+
+more oracle
+--------------------------------------
+- Given a CDB unique name, figure out the ORACLE_HOME:
+grep <cdb_unique_name> /etc/oratab
+Each line is formatted as ORACLE_SID:ORACLE_HOME:should_db_launch_at_sys_startup
+
+
+- Given a CDB unique name, determine where it is located (which cluster nodes it's on):
+log onto an Oracle VM
+    ssh user@host
+    bash
+(add tnsping to the PATH)
+    (source ~/.bash_profile)
+use tnsping
+    tnsping <<cdb unique name>>
+
+
+- Check whether the CDB is running:
+You can try connecting to it via SQLDeveloper
+
+- Gracefully start or stop a CDB
+https://oracle-base.com/articles/12c/multitenant-startup-and-shutdown-cdb-and-pdb-12cr1
+SHUTDOWN; -- doesn't seem to do anything
+STARTUP;
+srvctl stop database -db <<cdb unique name>>
+srvctl start database -db <<cdb unique name>>
+-- works!
+
+
+
+
+- Given a CDB unique name, find the important properties about the database (what nodes it is running on, what resources it is allocated in terms of CPU/memory)
+https://oracle-base.com/articles/12c/multitenant-resource-manager-cdb-and-pdb-12cr1
+
+- Get the ORACLE_HOME
+First, logon to the server that holds the DB in question.  Then,
+    dbhome <SID>
+    dbhome <<cdb unique name>>
+if it outputs "/home/oracle", that means it couldn't find the SID.
+
+
+- Figure out if a CDB is primary or standby:
+select sys_context('userenv','DATABASE_ROLE') DATABASE_ROLE FROM dual;
+
+
+- Delete the logs because it got too full:
+rman target "sqluser/sqlpassword@host:port/<<cdb unique name>>"
+crosscheck archivelog all;
+delete archivelog all;
+exit
+
+- Change the TZ env timezone
+srvctl setenv database -d <<cdb_unique_name>> -T TZ='Asia/Yerevan'
+
+- enable/disable a trigger
+alter trigger MYTABLE.MY_TRIGGER ENABLE;
+alter trigger MYTABLE.MY_TRIGGER DISABLE;
+
+
+- Check the running status of instances/services:
+srvctl status service -d <<cdb unique name>>
+
+- Force close a pdb and open:
+alter pluggable database <<pdb name>> close immediate instances=all;
+alter pluggable database <<pdb name>> open read only instances=all;
+
+I'd say the most important utilities you might want to tinker around with are:
+
+- SQL*Plus
+  * SQL client CLI REPL that comes with oracle software
+  * `sqlplus` is a command that you can execute on the Oracle VM itself
+  * sqlplus -L user/password@host:port/<<cdb unique name>> as sysdba
+  * sqlplus -L user/password@host:port/<<cdb unique name>>
+
+- srvctl
+  * server CLI
+  * a tool to show the status of, start, and stop all of the instances of a CDB on a cluster
+https://docs.oracle.com/database/121/RACAD/GUID-C2D37BAB-DA98-49B4-A777-F2B3AA8D2E7A.htm#RACAD5006
+
+- dgmgrl
+  * the tool that manages the dataguard configuration
+  * CLI REPL
+https://docs.oracle.com/cd/B28359_01/server.111/b28295/dgmgrl.htm
+  * dgmgrl <user>/<pass>@<<cdb unique name>>
+
+
+
+
+
+
